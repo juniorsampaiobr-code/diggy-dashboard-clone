@@ -1,11 +1,63 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Logo } from "@/components/Logo";
+import { LoginForm } from "@/components/LoginForm";
+import { FeatureCard } from "@/components/FeatureCard";
+import { StatCard } from "@/components/StatCard";
+import { QrCode, Bike, Link, Printer } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-12">
+          <Logo />
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-12 items-start max-w-6xl mx-auto">
+          {/* Login Section */}
+          <div className="bg-card p-8 rounded-2xl shadow-sm border">
+            <LoginForm />
+          </div>
+
+          {/* Features Section */}
+          <div className="space-y-6">
+            <div className="grid gap-4">
+              <FeatureCard
+                icon={QrCode}
+                title="QR Code"
+                description="Tenha seu cardápio na mesa ou em panfletos para acesso rápido dos seus clientes"
+              />
+              <FeatureCard
+                icon={Bike}
+                title="Delivery"
+                description="Sem limite de pedidos e taxas de entrega por distância e bairro"
+              />
+              <FeatureCard
+                icon={Link}
+                title="Link da loja"
+                description="Seu cliente acessa seu link e faz o pedido sem complicações de cadastro ou instalação de apps"
+              />
+              <FeatureCard
+                icon={Printer}
+                title="Impressão"
+                description="Impressão automática dos seus pedidos para agilizar ainda mais sua operação"
+              />
+            </div>
+
+            {/* Stats Section */}
+            <div className="bg-card p-8 rounded-2xl shadow-sm border">
+              <div className="grid grid-cols-3 gap-6">
+                <StatCard value="+30 mil" label="cardápios criados" />
+                <StatCard value="+18 milhões" label="em pedidos" />
+                <StatCard value="+260 mil" label="pessoas por mês" />
+              </div>
+            </div>
+
+            <Button className="w-full h-12 text-base" size="lg">
+              Entrar no Pedido 123
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
