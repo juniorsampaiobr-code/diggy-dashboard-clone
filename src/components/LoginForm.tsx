@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Apple } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export const LoginForm = () => {
   return (
@@ -12,12 +12,27 @@ export const LoginForm = () => {
         </p>
       </div>
 
+      <Link to="/auth">
+        <Button variant="default" className="w-full h-12 text-base" size="lg">
+          Criar conta ou fazer login
+        </Button>
+      </Link>
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-card px-2 text-muted-foreground">acesso rápido</span>
+        </div>
+      </div>
+
       <div className="space-y-3">
-        <Button variant="outline" className="w-full h-12 text-base" size="lg">
+        <Button variant="outline" className="w-full h-12 text-base" size="lg" disabled>
           <Apple className="mr-2 h-5 w-5" />
           Entrar com Apple
         </Button>
-        <Button variant="outline" className="w-full h-12 text-base" size="lg">
+        <Button variant="outline" className="w-full h-12 text-base" size="lg" disabled>
           <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
             <path
               fill="currentColor"
@@ -38,23 +53,6 @@ export const LoginForm = () => {
           </svg>
           Entrar com Google
         </Button>
-      </div>
-
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-2 text-muted-foreground">ou</span>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Input
-          type="text"
-          placeholder="Código de acesso rápido"
-          className="h-12 text-base"
-        />
       </div>
     </div>
   );

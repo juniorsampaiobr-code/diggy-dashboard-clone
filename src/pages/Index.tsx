@@ -2,8 +2,9 @@ import { Logo } from "@/components/Logo";
 import { LoginForm } from "@/components/LoginForm";
 import { FeatureCard } from "@/components/FeatureCard";
 import { StatCard } from "@/components/StatCard";
-import { QrCode, Bike, Link, Printer } from "lucide-react";
+import { QrCode, Bike, Link as LinkIcon, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   return (
@@ -33,7 +34,7 @@ const Index = () => {
                 description="Sem limite de pedidos e taxas de entrega por distância e bairro"
               />
               <FeatureCard
-                icon={Link}
+                icon={LinkIcon}
                 title="Link da loja"
                 description="Seu cliente acessa seu link e faz o pedido sem complicações de cadastro ou instalação de apps"
               />
@@ -53,9 +54,11 @@ const Index = () => {
               </div>
             </div>
 
-            <Button className="w-full h-12 text-base" size="lg">
-              Entrar no Pedido 123
-            </Button>
+            <Link to="/auth" className="block">
+              <Button className="w-full h-12 text-base" size="lg">
+                Entrar no Pedido 123
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
