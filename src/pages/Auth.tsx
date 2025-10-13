@@ -6,6 +6,18 @@ import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { z } from "zod";
+
+const authSchema = z.object({
+  email: z.string().trim().email({ message: "Email inválido" }),
+  password: z
+    .string()
+    .min(8, "Senha deve ter no mínimo 8 caracteres")
+    .regex(/[A-Z]/, "Senha deve conter letra maiúscula")
+    .regex(/[a-z]/, "Senha deve conter letra minúscula")
+    .regex(/[0-9]/, "Senha deve conter número"),
+  fullName: z.string().trim().min(2, "Nome muito curto").optional(),
+});
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -20,30 +32,41 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      // Validate inputs
+      const validation = authSchema.safeParse({
+        email: email.trim(),
+        password,
+        fullName: !isLogin ? fullName : undefined,
+      });
+
+      if (!validation.success) {
+        const firstError = validation.error.errors[0];
+        toast.error(firstError.message);
+        setLoading(false);
+        return;
+      }
+
+      const trimmedEmail = email.trim();
+
       if (isLogin) {
-        const { error } = await signIn(email, password);
+        const { error } = await signIn(trimmedEmail, password);
         if (error) {
-          if (error.message.includes("Invalid login credentials")) {
-            toast.error("Email ou senha incorretos");
-          } else {
-            toast.error(error.message);
-          }
+          // Generic error message to prevent user enumeration
+          toast.error("Email ou senha incorretos");
         } else {
           toast.success("Login realizado com sucesso!");
         }
       } else {
-        const { error } = await signUp(email, password, fullName);
+        const { error } = await signUp(trimmedEmail, password, fullName.trim());
         if (error) {
-          if (error.message.includes("already registered")) {
-            toast.error("Este email já está cadastrado");
-          } else {
-            toast.error(error.message);
-          }
+          // Generic error message to prevent user enumeration
+          toast.error("Não foi possível criar a conta. Tente novamente.");
         } else {
-          toast.success("Conta criada com sucesso!");
+          toast.success("Conta criada com sucesso! Você já está logado.");
         }
       }
     } catch (error) {
+      console.error("Error:", error);
       toast.error("Ocorreu um erro. Tente novamente.");
     } finally {
       setLoading(false);
@@ -103,8 +126,13 @@ const Auth = () => {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              minLength={6}
+              minLength={8}
             />
+            {!isLogin && (
+              <p className="text-xs text-muted-foreground">
+                Mínimo 8 caracteres, com letra maiúscula, minúscula e número
+              </p>
+            )}
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>
