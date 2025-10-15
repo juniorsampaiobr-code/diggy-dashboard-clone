@@ -5,7 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: "/diggy-dashboard-clone/",
+  base: mode === 'production' ? '/diggy-dashboard-clone/' : '/',
   server: {
     host: "::",
     port: 8080,
