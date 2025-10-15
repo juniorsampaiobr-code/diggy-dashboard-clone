@@ -14,6 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
+      business_hours: {
+        Row: {
+          close_time: string
+          created_at: string | null
+          day_of_week: number
+          id: string
+          is_open: boolean | null
+          open_time: string
+          store_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          close_time: string
+          created_at?: string | null
+          day_of_week: number
+          id?: string
+          is_open?: boolean | null
+          open_time: string
+          store_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          close_time?: string
+          created_at?: string | null
+          day_of_week?: number
+          id?: string
+          is_open?: boolean | null
+          open_time?: string
+          store_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_hours_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cash_transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          order_id: string | null
+          payment_method: string | null
+          store_id: string
+          type: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          payment_method?: string | null
+          store_id: string
+          type: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          payment_method?: string | null
+          store_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_transactions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_transactions_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string
@@ -107,7 +206,10 @@ export type Database = {
           customer_name: string
           customer_phone: string
           id: string
+          mercado_pago_payment_id: string | null
           notes: string | null
+          payment_method: string | null
+          payment_status: string | null
           status: Database["public"]["Enums"]["order_status"]
           store_id: string
           total_amount: number
@@ -119,7 +221,10 @@ export type Database = {
           customer_name: string
           customer_phone: string
           id?: string
+          mercado_pago_payment_id?: string | null
           notes?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           store_id: string
           total_amount: number
@@ -131,7 +236,10 @@ export type Database = {
           customer_name?: string
           customer_phone?: string
           id?: string
+          mercado_pago_payment_id?: string | null
           notes?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           store_id?: string
           total_amount?: number
@@ -231,14 +339,62 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_pauses: {
+        Row: {
+          created_at: string | null
+          end_time: string
+          id: string
+          is_active: boolean | null
+          reason: string | null
+          start_time: string
+          store_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_time: string
+          id?: string
+          is_active?: boolean | null
+          reason?: string | null
+          start_time: string
+          store_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_time?: string
+          id?: string
+          is_active?: boolean | null
+          reason?: string | null
+          start_time?: string
+          store_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_pauses_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stores: {
         Row: {
+          accepts_cash: boolean | null
+          accepts_credit: boolean | null
+          accepts_debit: boolean | null
+          accepts_online_payment: boolean | null
+          accepts_pix: boolean | null
           address: string | null
           created_at: string
           description: string | null
           id: string
           is_active: boolean | null
           logo_url: string | null
+          mercado_pago_access_token: string | null
+          mercado_pago_public_key: string | null
           name: string
           owner_id: string
           phone: string | null
@@ -246,12 +402,19 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
+          accepts_cash?: boolean | null
+          accepts_credit?: boolean | null
+          accepts_debit?: boolean | null
+          accepts_online_payment?: boolean | null
+          accepts_pix?: boolean | null
           address?: string | null
           created_at?: string
           description?: string | null
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
+          mercado_pago_access_token?: string | null
+          mercado_pago_public_key?: string | null
           name: string
           owner_id: string
           phone?: string | null
@@ -259,12 +422,19 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
+          accepts_cash?: boolean | null
+          accepts_credit?: boolean | null
+          accepts_debit?: boolean | null
+          accepts_online_payment?: boolean | null
+          accepts_pix?: boolean | null
           address?: string | null
           created_at?: string
           description?: string | null
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
+          mercado_pago_access_token?: string | null
+          mercado_pago_public_key?: string | null
           name?: string
           owner_id?: string
           phone?: string | null

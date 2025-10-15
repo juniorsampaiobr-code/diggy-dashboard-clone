@@ -10,6 +10,9 @@ import {
   Settings,
   LogOut,
   Store,
+  Wallet,
+  Clock,
+  CreditCard,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -35,9 +38,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-    { icon: Store, label: "Minha Loja", path: "/dashboard/store" },
     { icon: Package, label: "Produtos", path: "/dashboard/products" },
     { icon: ShoppingCart, label: "Pedidos", path: "/dashboard/orders" },
+    { icon: Wallet, label: "Caixa", path: "/dashboard/cash-register" },
+    { icon: Clock, label: "Horários", path: "/dashboard/business-hours" },
+    { icon: CreditCard, label: "Pagamentos", path: "/dashboard/payment-settings" },
+    { icon: Store, label: "Minha Loja", path: "/dashboard/store" },
     { icon: Settings, label: "Configurações", path: "/dashboard/settings" },
   ];
 

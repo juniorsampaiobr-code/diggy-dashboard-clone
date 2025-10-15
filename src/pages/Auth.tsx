@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,6 +8,7 @@ import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { z } from "zod";
+import { FcGoogle } from "react-icons/fc";
 
 const authSchema = z.object({
   email: z.string().trim().email({ message: "Email inválido" }),
@@ -73,6 +75,21 @@ const Auth = () => {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+      
+      if (error) throw error;
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao fazer login com Google");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
@@ -81,16 +98,38 @@ const Auth = () => {
             <Logo />
           </div>
           <h2 className="text-2xl font-bold text-foreground">
-            {isLogin ? "Entrar na conta" : "Criar conta"}
+            Entrar no Diggy
           </h2>
           <p className="mt-2 text-muted-foreground">
-            {isLogin
-              ? "Entre com suas credenciais para acessar o painel"
-              : "Preencha os dados abaixo para criar sua conta"}
+            Utilize uma das opções abaixo para criar sua conta ou fazer login
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6 bg-card p-8 rounded-2xl shadow-sm border">
+        <div className="bg-card p-8 rounded-2xl shadow-sm border space-y-6">
+          <div className="space-y-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleGoogleLogin}
+            >
+              <FcGoogle className="mr-2 h-5 w-5" />
+              Entrar com Google
+            </Button>
+          </div>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">
+                ou
+              </span>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
           {!isLogin && (
             <div className="space-y-2">
               <Label htmlFor="fullName">Nome completo</Label>
@@ -148,18 +187,19 @@ const Auth = () => {
             )}
           </Button>
 
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-primary hover:underline"
-            >
-              {isLogin
-                ? "Não tem uma conta? Cadastre-se"
-                : "Já tem uma conta? Entre"}
-            </button>
-          </div>
-        </form>
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => setIsLogin(!isLogin)}
+                className="text-sm text-primary hover:underline"
+              >
+                {isLogin
+                  ? "Não tem uma conta? Cadastre-se"
+                  : "Já tem uma conta? Entre"}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
