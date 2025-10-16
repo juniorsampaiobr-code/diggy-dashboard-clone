@@ -15,6 +15,8 @@ import StoreSettings from "./pages/StoreSettings";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
+import StoreMenu from "./pages/StoreMenu";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -26,6 +28,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/menu/:storeId" element={<StoreMenu />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/products" element={<Products />} />
           <Route path="/dashboard/orders" element={<Orders />} />

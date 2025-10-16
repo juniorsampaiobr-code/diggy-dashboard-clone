@@ -1,6 +1,7 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, ShoppingCart, TrendingUp, Users } from "lucide-react";
+import { ShareStoreLink } from "@/components/ShareStoreLink";
 
 const Dashboard = () => {
   const stats = [
@@ -104,6 +105,8 @@ const Dashboard = () => {
             </div>
           </CardContent>
         </Card>
+
+        <ShareStoreLink />
       </div>
     </DashboardLayout>
   );

@@ -8,7 +8,6 @@ import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { z } from "zod";
-import { FcGoogle } from "react-icons/fc";
 
 const authSchema = z.object({
   email: z.string().trim().email({ message: "Email inválido" }),
@@ -75,20 +74,6 @@ const Auth = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`
-        }
-      });
-      
-      if (error) throw error;
-    } catch (error: any) {
-      toast.error(error.message || "Erro ao fazer login com Google");
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -106,29 +91,6 @@ const Auth = () => {
         </div>
 
         <div className="bg-card p-8 rounded-2xl shadow-sm border space-y-6">
-          <div className="space-y-3">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={handleGoogleLogin}
-            >
-              <FcGoogle className="mr-2 h-5 w-5" />
-              Entrar com Google
-            </Button>
-          </div>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
-                ou
-              </span>
-            </div>
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-6">
           {!isLogin && (
             <div className="space-y-2">
@@ -167,11 +129,15 @@ const Auth = () => {
               required
               minLength={8}
             />
-            {!isLogin && (
-              <p className="text-xs text-muted-foreground">
-                Mínimo 8 caracteres, com letra maiúscula, minúscula e número
-              </p>
-            )}
+            <div className="text-xs text-muted-foreground space-y-1">
+              <p className="font-medium">A senha deve conter:</p>
+              <ul className="list-disc list-inside space-y-0.5">
+                <li>Mínimo 8 caracteres</li>
+                <li>Pelo menos uma letra maiúscula (A-Z)</li>
+                <li>Pelo menos uma letra minúscula (a-z)</li>
+                <li>Pelo menos um número (0-9)</li>
+              </ul>
+            </div>
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>
