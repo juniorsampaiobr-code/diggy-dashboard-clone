@@ -88,6 +88,16 @@ const Products = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!storeId) {
+      toast({
+        title: "Erro",
+        description: "Você precisa criar uma loja antes de adicionar produtos",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -120,9 +130,11 @@ const Products = () => {
       setDialogOpen(false);
       resetForm();
       loadProducts(storeId);
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Error saving product:", error);
       toast({
         title: "Erro ao salvar produto",
+        description: error.message || "Tente novamente mais tarde",
         variant: "destructive",
       });
     } finally {
@@ -335,8 +347,8 @@ const Products = () => {
                   />
                   <Label htmlFor="is_available">Produto disponível</Label>
                 </div>
-                <Button type="submit" disabled={loading}>
-                  {editingProduct ? "Atualizar" : "Criar"} Produto
+                <Button type="submit" disabled={loading || uploadingImage}>
+                  {loading ? "Salvando..." : editingProduct ? "Atualizar Produto" : "Criar Produto"}
                 </Button>
               </form>
             </DialogContent>
