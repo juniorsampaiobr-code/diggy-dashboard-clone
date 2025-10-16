@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -22,10 +23,18 @@ interface Product {
   category_id: string | null;
 }
 
+interface Category {
+  id: string;
+  name: string;
+  description: string | null;
+}
+
 const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [storeId, setStoreId] = useState<string>("");
   const { toast } = useToast();
@@ -37,6 +46,11 @@ const Products = () => {
     price: "",
     image_url: "",
     is_available: true,
+    category_id: "",
+  });
+  const [categoryFormData, setCategoryFormData] = useState({
+    name: "",
+    description: "",
   });
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -58,9 +72,25 @@ const Products = () => {
       if (store) {
         setStoreId(store.id);
         loadProducts(store.id);
+        loadCategories(store.id);
       }
     } catch (error) {
       console.error("Error loading store:", error);
+    }
+  };
+
+  const loadCategories = async (storeId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .eq("store_id", storeId)
+        .order("name", { ascending: true });
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error("Error loading categories:", error);
     }
   };
 
@@ -107,6 +137,7 @@ const Products = () => {
         price: parseFloat(formData.price),
         image_url: formData.image_url || null,
         is_available: formData.is_available,
+        category_id: formData.category_id || null,
         store_id: storeId,
       };
 
@@ -170,6 +201,7 @@ const Products = () => {
       price: product.price.toString(),
       image_url: product.image_url || "",
       is_available: product.is_available,
+      category_id: product.category_id || "",
     });
     setDialogOpen(true);
   };
@@ -181,10 +213,55 @@ const Products = () => {
       price: "",
       image_url: "",
       is_available: true,
+      category_id: "",
     });
     setEditingProduct(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+  };
+
+  const handleCreateCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!storeId) {
+      toast({
+        title: "Erro",
+        description: "Você precisa criar uma loja antes de adicionar categorias",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("categories")
+        .insert([{
+          name: categoryFormData.name,
+          description: categoryFormData.description || null,
+          store_id: storeId,
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      toast({ title: "Categoria criada com sucesso!" });
+      setCategoryDialogOpen(false);
+      setCategoryFormData({ name: "", description: "" });
+      loadCategories(storeId);
+      
+      // Auto-select the newly created category
+      if (data) {
+        setFormData({ ...formData, category_id: data.id });
+      }
+    } catch (error: any) {
+      console.error("Error creating category:", error);
+      toast({
+        title: "Erro ao criar categoria",
+        description: error.message || "Tente novamente mais tarde",
+        variant: "destructive",
+      });
     }
   };
 
@@ -298,6 +375,59 @@ const Products = () => {
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     required
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category_id">Categoria</Label>
+                  <div className="flex gap-2">
+                    <Select
+                      value={formData.category_id}
+                      onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Selecione uma categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button type="button" variant="outline" size="icon">
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Nova Categoria</DialogTitle>
+                        </DialogHeader>
+                        <form onSubmit={handleCreateCategory} className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="category_name">Nome *</Label>
+                            <Input
+                              id="category_name"
+                              value={categoryFormData.name}
+                              onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="category_description">Descrição</Label>
+                            <Textarea
+                              id="category_description"
+                              value={categoryFormData.description}
+                              onChange={(e) => setCategoryFormData({ ...categoryFormData, description: e.target.value })}
+                              rows={3}
+                            />
+                          </div>
+                          <Button type="submit">Criar Categoria</Button>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="image_url">Imagem do Produto</Label>
