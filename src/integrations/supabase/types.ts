@@ -264,6 +264,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_available: boolean | null
+          is_weighable: boolean | null
           name: string
           price: number
           store_id: string
@@ -277,6 +278,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_available?: boolean | null
+          is_weighable?: boolean | null
           name: string
           price: number
           store_id: string
@@ -290,6 +292,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_available?: boolean | null
+          is_weighable?: boolean | null
           name?: string
           price?: number
           store_id?: string

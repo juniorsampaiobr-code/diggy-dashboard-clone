@@ -21,6 +21,7 @@ interface Product {
   image_url: string | null;
   is_available: boolean;
   category_id: string | null;
+  is_weighable: boolean;
 }
 
 interface Category {
@@ -47,6 +48,7 @@ const Products = () => {
     image_url: "",
     is_available: true,
     category_id: "",
+    is_weighable: false,
   });
   const [categoryFormData, setCategoryFormData] = useState({
     name: "",
@@ -138,6 +140,7 @@ const Products = () => {
         image_url: formData.image_url || null,
         is_available: formData.is_available,
         category_id: formData.category_id || null,
+        is_weighable: formData.is_weighable,
         store_id: storeId,
       };
 
@@ -202,6 +205,7 @@ const Products = () => {
       image_url: product.image_url || "",
       is_available: product.is_available,
       category_id: product.category_id || "",
+      is_weighable: product.is_weighable,
     });
     setDialogOpen(true);
   };
@@ -214,6 +218,7 @@ const Products = () => {
       image_url: "",
       is_available: true,
       category_id: "",
+      is_weighable: false,
     });
     setEditingProduct(null);
     if (fileInputRef.current) {
@@ -366,7 +371,9 @@ const Products = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="price">Preço (R$) *</Label>
+                  <Label htmlFor="price">
+                    Preço (R$) {formData.is_weighable ? "por kg" : "unitário"} *
+                  </Label>
                   <Input
                     id="price"
                     type="number"
@@ -471,6 +478,14 @@ const Products = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch
+                    id="is_weighable"
+                    checked={formData.is_weighable}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_weighable: checked })}
+                  />
+                  <Label htmlFor="is_weighable">Produto pesável (preço por kg)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
                     id="is_available"
                     checked={formData.is_available}
                     onCheckedChange={(checked) => setFormData({ ...formData, is_available: checked })}
@@ -532,7 +547,7 @@ const Products = () => {
                     )}
                     <div className="flex items-center justify-between">
                       <span className="text-lg font-bold text-primary">
-                        R$ {product.price.toFixed(2)}
+                        R$ {product.price.toFixed(2)}{product.is_weighable ? "/kg" : ""}
                       </span>
                       <span className={`text-xs px-2 py-1 rounded ${
                         product.is_available 
