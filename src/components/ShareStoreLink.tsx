@@ -37,7 +37,9 @@ export const ShareStoreLink = () => {
   };
 
   const getStoreUrl = () => {
-    return `${window.location.origin}/menu/${storeId}`;
+    const baseUrl = import.meta.env.BASE_URL || '/';
+    const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    return `${window.location.origin}${cleanBase}/menu/${storeId}`;
   };
 
   const copyToClipboard = () => {
