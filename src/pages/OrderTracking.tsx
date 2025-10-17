@@ -56,8 +56,8 @@ const statusConfig: Record<string, { label: string; icon: any; color: string }> 
 const paymentMethodLabels: Record<string, string> = {
   cash: "Dinheiro",
   pix: "PIX",
-  credit: "Cartão de Crédito",
-  debit: "Cartão de Débito",
+  credit: "Pagamento online",
+  debit: "Pagamento com cartão na entrega",
   online: "Pagamento Online",
 };
 

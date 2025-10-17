@@ -101,7 +101,7 @@ const PaymentSettings = () => {
             </div>
 
             <div className="flex items-center justify-between">
-              <Label htmlFor="debit">Cartão de Débito</Label>
+              <Label htmlFor="debit">Pagamento com cartão na entrega</Label>
               <Switch
                 id="debit"
                 checked={settings.accepts_debit}
@@ -112,7 +112,7 @@ const PaymentSettings = () => {
             </div>
 
             <div className="flex items-center justify-between">
-              <Label htmlFor="credit">Cartão de Crédito</Label>
+              <Label htmlFor="credit">Pagamento online</Label>
               <Switch
                 id="credit"
                 checked={settings.accepts_credit}

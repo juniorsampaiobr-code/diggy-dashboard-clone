@@ -428,8 +428,8 @@ const StoreMenu = () => {
                   <option value="">Selecione uma forma de pagamento</option>
                   {store?.accepts_cash && <option value="cash">Dinheiro</option>}
                   {store?.accepts_pix && <option value="pix">PIX</option>}
-                  {store?.accepts_credit && <option value="credit">Cartão de Crédito</option>}
-                  {store?.accepts_debit && <option value="debit">Cartão de Débito</option>}
+                  {store?.accepts_credit && <option value="credit">Pagamento online</option>}
+                  {store?.accepts_debit && <option value="debit">Pagamento com cartão na entrega</option>}
                 </select>
               </div>
 
