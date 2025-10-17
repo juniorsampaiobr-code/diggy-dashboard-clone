@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { ShoppingCart, Plus, Minus, Phone, MapPin } from "lucide-react";
+import { PaymentForm } from "@/components/PaymentForm";
 
 interface Product {
   id: string;
@@ -31,6 +32,7 @@ interface Store {
   accepts_credit: boolean;
   accepts_debit: boolean;
   accepts_online_payment: boolean;
+  mercado_pago_public_key: string | null;
 }
 
 interface CartItem extends Product {
@@ -45,6 +47,8 @@ const StoreMenu = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
   const [orderData, setOrderData] = useState({
     customer_name: "",
     customer_phone: "",
@@ -169,17 +173,24 @@ const StoreMenu = () => {
 
       if (itemsError) throw itemsError;
 
-      toast.success("Pedido realizado com sucesso!");
-      navigate(`/order/${newOrder.id}`);
-      setCart([]);
-      setCheckoutOpen(false);
-      setOrderData({
-        customer_name: "",
-        customer_phone: "",
-        customer_address: "",
-        notes: "",
-        payment_method: "",
-      });
+      // Check if payment requires online processing
+      if (orderData.payment_method === "pix" || orderData.payment_method === "credit") {
+        setCreatedOrderId(newOrder.id);
+        setShowPaymentForm(true);
+        toast.success("Pedido criado! Complete o pagamento.");
+      } else {
+        toast.success("Pedido realizado com sucesso!");
+        navigate(`/order/${newOrder.id}`);
+        setCart([]);
+        setCheckoutOpen(false);
+        setOrderData({
+          customer_name: "",
+          customer_phone: "",
+          customer_address: "",
+          notes: "",
+          payment_method: "",
+        });
+      }
     } catch (error) {
       console.error("Error creating order:", error);
       toast.error("Erro ao criar pedido");
@@ -441,6 +452,36 @@ const StoreMenu = () => {
               </Button>
             </form>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Form Dialog */}
+      <Dialog open={showPaymentForm} onOpenChange={setShowPaymentForm}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Pagamento</DialogTitle>
+          </DialogHeader>
+          {createdOrderId && store?.mercado_pago_public_key && (
+            <PaymentForm
+              orderId={createdOrderId}
+              totalAmount={getTotalPrice()}
+              paymentMethod={orderData.payment_method}
+              mercadoPagoPublicKey={store.mercado_pago_public_key}
+              onPaymentComplete={() => {
+                setShowPaymentForm(false);
+                navigate(`/order/${createdOrderId}`);
+                setCart([]);
+                setCheckoutOpen(false);
+                setOrderData({
+                  customer_name: "",
+                  customer_phone: "",
+                  customer_address: "",
+                  notes: "",
+                  payment_method: "",
+                });
+              }}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>
