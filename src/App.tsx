@@ -16,6 +16,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 import StoreMenu from "./pages/StoreMenu";
+import OrderTracking from "./pages/OrderTracking";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/menu/:storeId" element={<StoreMenu />} />
+          <Route path="/order/:orderId" element={<OrderTracking />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/products" element={<Products />} />
           <Route path="/dashboard/orders" element={<Orders />} />

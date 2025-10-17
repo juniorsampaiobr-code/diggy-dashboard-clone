@@ -26,6 +26,11 @@ interface Store {
   phone: string | null;
   address: string | null;
   logo_url: string | null;
+  accepts_cash: boolean;
+  accepts_pix: boolean;
+  accepts_credit: boolean;
+  accepts_debit: boolean;
+  accepts_online_payment: boolean;
 }
 
 interface CartItem extends Product {
@@ -45,6 +50,7 @@ const StoreMenu = () => {
     customer_phone: "",
     customer_address: "",
     notes: "",
+    payment_method: "",
   });
 
   useEffect(() => {
@@ -138,6 +144,7 @@ const StoreMenu = () => {
           customer_phone: orderData.customer_phone,
           customer_address: orderData.customer_address,
           notes: orderData.notes,
+          payment_method: orderData.payment_method,
           total_amount: totalAmount,
           status: "pending",
         })
@@ -163,6 +170,7 @@ const StoreMenu = () => {
       if (itemsError) throw itemsError;
 
       toast.success("Pedido realizado com sucesso!");
+      navigate(`/order/${newOrder.id}`);
       setCart([]);
       setCheckoutOpen(false);
       setOrderData({
@@ -170,6 +178,7 @@ const StoreMenu = () => {
         customer_phone: "",
         customer_address: "",
         notes: "",
+        payment_method: "",
       });
     } catch (error) {
       console.error("Error creating order:", error);
@@ -392,6 +401,26 @@ const StoreMenu = () => {
                   rows={3}
                   required
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="payment_method">Forma de Pagamento *</Label>
+                <select
+                  id="payment_method"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  value={orderData.payment_method}
+                  onChange={(e) =>
+                    setOrderData({ ...orderData, payment_method: e.target.value })
+                  }
+                  required
+                >
+                  <option value="">Selecione uma forma de pagamento</option>
+                  {store?.accepts_cash && <option value="cash">Dinheiro</option>}
+                  {store?.accepts_pix && <option value="pix">PIX</option>}
+                  {store?.accepts_credit && <option value="credit">Cartão de Crédito</option>}
+                  {store?.accepts_debit && <option value="debit">Cartão de Débito</option>}
+                  {store?.accepts_online_payment && <option value="online">Pagamento Online</option>}
+                </select>
               </div>
 
               <div className="space-y-2">
