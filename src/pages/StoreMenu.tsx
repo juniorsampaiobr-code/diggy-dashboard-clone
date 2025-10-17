@@ -1,3 +1,4 @@
+// Store Menu - Updated payment method labels
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
