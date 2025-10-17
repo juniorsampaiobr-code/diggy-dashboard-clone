@@ -430,7 +430,6 @@ const StoreMenu = () => {
                   {store?.accepts_pix && <option value="pix">PIX</option>}
                   {store?.accepts_credit && <option value="credit">Cartão de Crédito</option>}
                   {store?.accepts_debit && <option value="debit">Cartão de Débito</option>}
-                  {store?.accepts_online_payment && <option value="online">Pagamento Online</option>}
                 </select>
               </div>
 
