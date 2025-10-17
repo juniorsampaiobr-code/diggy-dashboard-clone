@@ -51,14 +51,21 @@ serve(async (req) => {
           payer: {
             email: `${order.customer_phone}@customer.com`,
             first_name: order.customer_name.split(" ")[0],
-            last_name: order.customer_name.split(" ").slice(1).join(" "),
+            last_name: order.customer_name.split(" ").slice(1).join(" ") || order.customer_name.split(" ")[0],
           },
         }),
       });
 
       const pixData = await pixPayment.json();
+      
+      console.log("PIX Payment Response:", JSON.stringify(pixData));
 
-      if (pixData.status === "pending") {
+      if (!pixPayment.ok) {
+        console.error("Mercado Pago Error:", pixData);
+        throw new Error(pixData.message || "Erro ao criar pagamento PIX");
+      }
+
+      if (pixData.status === "pending" && pixData.point_of_interaction?.transaction_data) {
         paymentResult = {
           success: true,
           paymentId: pixData.id,
@@ -75,7 +82,8 @@ serve(async (req) => {
           })
           .eq("id", orderId);
       } else {
-        throw new Error("Erro ao criar pagamento PIX");
+        console.error("Unexpected PIX status or missing data:", pixData);
+        throw new Error(pixData.status_detail || "Erro ao criar pagamento PIX");
       }
     } else if (paymentMethod === "credit" || paymentMethod === "debit") {
       // Create card payment
@@ -127,6 +135,7 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
+    console.error("Payment processing error:", error);
     const errorMessage = error instanceof Error ? error.message : "Erro ao processar pagamento";
     return new Response(
       JSON.stringify({ error: errorMessage }),
