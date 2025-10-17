@@ -59,6 +59,7 @@ export const PaymentForm = ({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({
             orderId,
@@ -76,9 +77,10 @@ export const PaymentForm = ({
         });
         toast.success("Pagamento PIX gerado com sucesso!");
       } else {
-        throw new Error(data.error);
+        throw new Error(data.error || "Erro ao gerar pagamento PIX");
       }
     } catch (error: any) {
+      console.error("PIX Payment Error:", error);
       toast.error(error.message || "Erro ao gerar pagamento PIX");
     } finally {
       setLoading(false);
@@ -108,6 +110,7 @@ export const PaymentForm = ({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({
             orderId,
