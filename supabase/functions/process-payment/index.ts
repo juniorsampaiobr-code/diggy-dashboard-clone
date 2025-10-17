@@ -43,6 +43,7 @@ serve(async (req) => {
         headers: {
           "Authorization": `Bearer ${accessToken}`,
           "Content-Type": "application/json",
+          "X-Idempotency-Key": `${orderId}-pix-${Date.now()}`,
         },
         body: JSON.stringify({
           transaction_amount: order.total_amount,
@@ -92,6 +93,7 @@ serve(async (req) => {
         headers: {
           "Authorization": `Bearer ${accessToken}`,
           "Content-Type": "application/json",
+          "X-Idempotency-Key": `${orderId}-card-${Date.now()}`,
         },
         body: JSON.stringify({
           transaction_amount: order.total_amount,
