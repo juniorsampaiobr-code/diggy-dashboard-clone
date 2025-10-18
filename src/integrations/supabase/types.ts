@@ -151,6 +151,33 @@ export type Database = {
           },
         ]
       }
+      delivery_rates: {
+        Row: {
+          created_at: string
+          fee: number
+          id: string
+          max_distance_km: number
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fee: number
+          id?: string
+          max_distance_km: number
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fee?: number
+          id?: string
+          max_distance_km?: number
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           id: string
@@ -395,7 +422,9 @@ export type Database = {
           description: string | null
           id: string
           is_active: boolean | null
+          latitude: number | null
           logo_url: string | null
+          longitude: number | null
           mercado_pago_access_token: string | null
           mercado_pago_public_key: string | null
           name: string
@@ -415,7 +444,9 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean | null
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           mercado_pago_access_token?: string | null
           mercado_pago_public_key?: string | null
           name: string
@@ -435,7 +466,9 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean | null
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           mercado_pago_access_token?: string | null
           mercado_pago_public_key?: string | null
           name?: string

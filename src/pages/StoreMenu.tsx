@@ -35,6 +35,8 @@ interface Store {
   accepts_debit: boolean;
   accepts_online_payment: boolean;
   mercado_pago_public_key: string | null;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 interface CartItem extends Product {
@@ -54,6 +56,9 @@ const StoreMenu = () => {
   const [weightDialogOpen, setWeightDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [gramsInput, setGramsInput] = useState("");
+  const [deliveryFee, setDeliveryFee] = useState(0);
+  const [deliveryLatitude, setDeliveryLatitude] = useState("");
+  const [deliveryLongitude, setDeliveryLongitude] = useState("");
   const [orderData, setOrderData] = useState({
     customer_name: "",
     customer_phone: "",
@@ -174,8 +179,58 @@ const StoreMenu = () => {
     }
   };
 
+  // Calculate distance using Haversine formula (in km)
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  const calculateDeliveryFee = async () => {
+    if (!store?.latitude || !store?.longitude || !deliveryLatitude || !deliveryLongitude) {
+      setDeliveryFee(0);
+      return;
+    }
+
+    const distance = calculateDistance(
+      store.latitude,
+      store.longitude,
+      parseFloat(deliveryLatitude),
+      parseFloat(deliveryLongitude)
+    );
+
+    // Fetch delivery rates
+    const { data: rates, error } = await supabase
+      .from("delivery_rates")
+      .select("*")
+      .eq("store_id", storeId)
+      .order("max_distance_km", { ascending: true });
+
+    if (error || !rates || rates.length === 0) {
+      setDeliveryFee(0);
+      return;
+    }
+
+    // Find applicable rate
+    const applicableRate = rates.find(rate => distance <= rate.max_distance_km);
+    if (applicableRate) {
+      setDeliveryFee(applicableRate.fee);
+      toast.success(`Taxa de entrega: R$ ${applicableRate.fee.toFixed(2)} (${distance.toFixed(2)} km)`);
+    } else {
+      setDeliveryFee(0);
+      toast.error(`Endereço fora da área de entrega (${distance.toFixed(2)} km)`);
+    }
+  };
+
   const getTotalPrice = () => {
-    return cart.reduce((total, item) => total + item.price * item.quantity, 0);
+    const subtotal = cart.reduce((total, item) => total + item.price * item.quantity, 0);
+    return subtotal + deliveryFee;
   };
 
   const handleCheckout = async (e: React.FormEvent) => {
@@ -431,7 +486,17 @@ const StoreMenu = () => {
             </div>
 
             <div className="pt-4 border-t">
-              <div className="flex justify-between text-lg font-bold">
+              <div className="flex justify-between text-sm">
+                <span>Subtotal:</span>
+                <span>R$ {cart.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2)}</span>
+              </div>
+              {deliveryFee > 0 && (
+                <div className="flex justify-between text-sm text-muted-foreground mt-1">
+                  <span>Taxa de entrega:</span>
+                  <span>R$ {deliveryFee.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-lg font-bold mt-2 pt-2 border-t">
                 <span>Total:</span>
                 <span>R$ {getTotalPrice().toFixed(2)}</span>
               </div>
@@ -475,7 +540,54 @@ const StoreMenu = () => {
                   rows={3}
                   required
                 />
+                <p className="text-xs text-muted-foreground">
+                  Para calcular a taxa de entrega, use{" "}
+                  <a
+                    href="https://www.google.com/maps"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary underline"
+                  >
+                    Google Maps
+                  </a>{" "}
+                  para obter as coordenadas do seu endereço
+                </p>
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="delivery_latitude">Latitude</Label>
+                  <Input
+                    id="delivery_latitude"
+                    type="number"
+                    step="any"
+                    value={deliveryLatitude}
+                    onChange={(e) => setDeliveryLatitude(e.target.value)}
+                    placeholder="-23.5505"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="delivery_longitude">Longitude</Label>
+                  <Input
+                    id="delivery_longitude"
+                    type="number"
+                    step="any"
+                    value={deliveryLongitude}
+                    onChange={(e) => setDeliveryLongitude(e.target.value)}
+                    placeholder="-46.6333"
+                  />
+                </div>
+              </div>
+
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full"
+                onClick={calculateDeliveryFee}
+                disabled={!deliveryLatitude || !deliveryLongitude}
+              >
+                Calcular Taxa de Entrega
+              </Button>
 
               <div className="space-y-2">
                 <Label htmlFor="payment_method">Forma de Pagamento *</Label>

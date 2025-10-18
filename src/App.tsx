@@ -10,6 +10,7 @@ import Products from "./pages/Products";
 import Orders from "./pages/Orders";
 import CashRegister from "./pages/CashRegister";
 import BusinessHours from "./pages/BusinessHours";
+import DeliveryRates from "./pages/DeliveryRates";
 import PaymentSettings from "./pages/PaymentSettings";
 import StoreSettings from "./pages/StoreSettings";
 import Settings from "./pages/Settings";
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/dashboard/orders" element={<Orders />} />
           <Route path="/dashboard/cash-register" element={<CashRegister />} />
           <Route path="/dashboard/business-hours" element={<BusinessHours />} />
+          <Route path="/dashboard/delivery-rates" element={<DeliveryRates />} />
           <Route path="/dashboard/payment-settings" element={<PaymentSettings />} />
           <Route path="/dashboard/store" element={<StoreSettings />} />
           <Route path="/dashboard/settings" element={<Settings />} />
