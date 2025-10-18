@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
+import { useState, useCallback } from "react";
+import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 import { reverseGeocode } from "@/lib/geocoding";
 import { toast } from "sonner";
 
@@ -11,130 +10,117 @@ interface MapPickerProps {
 }
 
 const MapPicker = ({ latitude = -23.5505, longitude = -46.6333, onLocationSelect }: MapPickerProps) => {
-  const [mapboxToken, setMapboxToken] = useState(() => {
-    return localStorage.getItem("mapbox_token") || "";
+  const [googleMapsApiKey, setGoogleMapsApiKey] = useState(() => {
+    return localStorage.getItem("google_maps_api_key") || "";
   });
-  const [isMapLoading, setIsMapLoading] = useState(false);
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const marker = useRef<mapboxgl.Marker | null>(null);
+  const [markerPosition, setMarkerPosition] = useState({
+    lat: latitude,
+    lng: longitude,
+  });
+
+  const { isLoaded, loadError } = useJsApiLoader({
+    googleMapsApiKey: googleMapsApiKey,
+  });
 
   const handleTokenChange = (token: string) => {
-    setMapboxToken(token);
-    localStorage.setItem("mapbox_token", token);
+    setGoogleMapsApiKey(token);
+    localStorage.setItem("google_maps_api_key", token);
   };
 
-  const handleMapClick = useCallback(async (e: mapboxgl.MapMouseEvent) => {
-    const { lng, lat } = e.lngLat;
-    
-    if (marker.current) {
-      marker.current.setLngLat([lng, lat]);
-    }
-    
-    const address = await reverseGeocode(lat, lng);
-    if (address) {
-      onLocationSelect(lat, lng, address);
-      toast.success("Localização selecionada");
-    }
-  }, [onLocationSelect]);
+  const handleMapClick = useCallback(
+    async (e: google.maps.MapMouseEvent) => {
+      if (!e.latLng) return;
 
-  const handleMarkerDragEnd = useCallback(async () => {
-    if (!marker.current) return;
-    
-    const lngLat = marker.current.getLngLat();
-    const address = await reverseGeocode(lngLat.lat, lngLat.lng);
-    
-    if (address) {
-      onLocationSelect(lngLat.lat, lngLat.lng, address);
-      toast.success("Localização atualizada");
-    }
-  }, [onLocationSelect]);
+      const lat = e.latLng.lat();
+      const lng = e.latLng.lng();
 
-  useEffect(() => {
-    if (!mapboxToken || !mapContainer.current || map.current) return;
+      setMarkerPosition({ lat, lng });
 
-    setIsMapLoading(true);
-    mapboxgl.accessToken = mapboxToken;
-
-    try {
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: "mapbox://styles/mapbox/streets-v12",
-        center: [longitude, latitude],
-        zoom: 13,
-      });
-
-      map.current.on("load", () => {
-        setIsMapLoading(false);
-      });
-
-      map.current.on("error", (e) => {
-        console.error("Mapbox error:", e);
-        setIsMapLoading(false);
-        toast.error("Erro ao carregar o mapa. Verifique se o token está correto.");
-      });
-
-      marker.current = new mapboxgl.Marker({
-        draggable: true,
-      })
-        .setLngLat([longitude, latitude])
-        .addTo(map.current);
-
-      map.current.on("click", handleMapClick);
-      marker.current.on("dragend", handleMarkerDragEnd);
-    } catch (error) {
-      console.error("Erro ao inicializar o mapa:", error);
-      setIsMapLoading(false);
-      toast.error("Erro ao inicializar o mapa. Verifique seu token Mapbox.");
-    }
-
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
+      const address = await reverseGeocode(lat, lng);
+      if (address) {
+        onLocationSelect(lat, lng, address);
+        toast.success("Localização selecionada");
       }
-    };
-  }, [mapboxToken, latitude, longitude, handleMapClick, handleMarkerDragEnd]);
+    },
+    [onLocationSelect]
+  );
 
-  if (!mapboxToken) {
+  const handleMarkerDragEnd = useCallback(
+    async (e: google.maps.MapMouseEvent) => {
+      if (!e.latLng) return;
+
+      const lat = e.latLng.lat();
+      const lng = e.latLng.lng();
+
+      setMarkerPosition({ lat, lng });
+
+      const address = await reverseGeocode(lat, lng);
+      if (address) {
+        onLocationSelect(lat, lng, address);
+        toast.success("Localização atualizada");
+      }
+    },
+    [onLocationSelect]
+  );
+
+  if (!googleMapsApiKey) {
     return (
       <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
         <p className="text-sm text-muted-foreground">
-          Para usar o mapa interativo, insira seu token público do Mapbox:
+          Para usar o mapa interativo, insira sua chave de API do Google Maps:
         </p>
         <input
           type="text"
           className="w-full px-3 py-2 border rounded-md"
-          placeholder="pk.eyJ1..."
-          value={mapboxToken}
+          placeholder="AIza..."
+          value={googleMapsApiKey}
           onChange={(e) => handleTokenChange(e.target.value)}
         />
         <p className="text-xs text-muted-foreground">
-          Obtenha seu token gratuito em{" "}
+          Obtenha sua chave gratuita em{" "}
           <a
-            href="https://account.mapbox.com/access-tokens/"
+            href="https://console.cloud.google.com/google/maps-apis/credentials"
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary hover:underline"
           >
-            Mapbox
+            Google Cloud Console
           </a>
-          {" "}(50.000 carregamentos/mês grátis)
         </p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="p-4 border rounded-lg bg-destructive/10 text-destructive">
+        Erro ao carregar o Google Maps. Verifique se a chave de API está correta.
+      </div>
+    );
+  }
+
+  if (!isLoaded) {
+    return (
+      <div className="w-full h-[400px] rounded-lg border flex items-center justify-center bg-muted/50">
+        <p className="text-sm text-muted-foreground">Carregando mapa...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-2">
-      <div className="relative">
-        <div ref={mapContainer} className="w-full h-[400px] rounded-lg border" />
-        {isMapLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/50 rounded-lg">
-            <p className="text-sm text-muted-foreground">Carregando mapa...</p>
-          </div>
-        )}
-      </div>
+      <GoogleMap
+        mapContainerClassName="w-full h-[400px] rounded-lg border"
+        center={markerPosition}
+        zoom={13}
+        onClick={handleMapClick}
+      >
+        <Marker
+          position={markerPosition}
+          draggable={true}
+          onDragEnd={handleMarkerDragEnd}
+        />
+      </GoogleMap>
       <p className="text-xs text-muted-foreground">
         Clique no mapa ou arraste o marcador para selecionar a localização
       </p>
