@@ -19,6 +19,7 @@ interface Product {
   price: number;
   image_url: string | null;
   is_available: boolean;
+  is_weighable: boolean;
 }
 
 interface Store {
@@ -50,6 +51,9 @@ const StoreMenu = () => {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
+  const [weightDialogOpen, setWeightDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [gramsInput, setGramsInput] = useState("");
   const [orderData, setOrderData] = useState({
     customer_name: "",
     customer_phone: "",
@@ -96,6 +100,13 @@ const StoreMenu = () => {
   };
 
   const addToCart = (product: Product) => {
+    if (product.is_weighable) {
+      setSelectedProduct(product);
+      setGramsInput("");
+      setWeightDialogOpen(true);
+      return;
+    }
+
     const existingItem = cart.find((item) => item.id === product.id);
     if (existingItem) {
       setCart(
@@ -109,6 +120,34 @@ const StoreMenu = () => {
       setCart([...cart, { ...product, quantity: 1 }]);
     }
     toast.success(`${product.name} adicionado ao carrinho`);
+  };
+
+  const addWeighableToCart = () => {
+    if (!selectedProduct || !gramsInput) return;
+    
+    const grams = parseFloat(gramsInput);
+    if (isNaN(grams) || grams <= 0) {
+      toast.error("Insira uma quantidade válida em gramas");
+      return;
+    }
+
+    const existingItem = cart.find((item) => item.id === selectedProduct.id);
+    if (existingItem) {
+      setCart(
+        cart.map((item) =>
+          item.id === selectedProduct.id
+            ? { ...item, quantity: item.quantity + grams }
+            : item
+        )
+      );
+    } else {
+      setCart([...cart, { ...selectedProduct, quantity: grams }]);
+    }
+    
+    toast.success(`${grams}g de ${selectedProduct.name} adicionado ao carrinho`);
+    setWeightDialogOpen(false);
+    setSelectedProduct(null);
+    setGramsInput("");
   };
 
   const updateQuantity = (productId: string, delta: number) => {
@@ -303,9 +342,10 @@ const StoreMenu = () => {
                         </p>
                       )}
                     </div>
-                    <div className="flex items-center justify-between">
+                     <div className="flex items-center justify-between">
                       <span className="text-xl font-bold text-primary">
                         R$ {product.price.toFixed(2)}
+                        {product.is_weighable && <span className="text-xs text-muted-foreground ml-1">/grama</span>}
                       </span>
                       <Button onClick={() => addToCart(product)}>
                         <Plus className="h-4 w-4 mr-1" />
@@ -339,24 +379,27 @@ const StoreMenu = () => {
                   <div className="flex-1">
                     <p className="font-medium">{item.name}</p>
                     <p className="text-sm text-muted-foreground">
-                      R$ {item.price.toFixed(2)} cada
+                      {item.is_weighable 
+                        ? `${item.quantity}g × R$ ${item.price.toFixed(2)}/g`
+                        : `${item.quantity} × R$ ${item.price.toFixed(2)}`
+                      }
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
                       size="icon"
                       variant="outline"
-                      onClick={() => updateQuantity(item.id, -1)}
+                      onClick={() => updateQuantity(item.id, item.is_weighable ? -10 : -1)}
                     >
                       <Minus className="h-4 w-4" />
                     </Button>
-                    <span className="w-8 text-center font-medium">
-                      {item.quantity}
+                    <span className="w-16 text-center font-medium text-xs">
+                      {item.is_weighable ? `${item.quantity}g` : item.quantity}
                     </span>
                     <Button
                       size="icon"
                       variant="outline"
-                      onClick={() => updateQuantity(item.id, 1)}
+                      onClick={() => updateQuantity(item.id, item.is_weighable ? 10 : 1)}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -482,6 +525,62 @@ const StoreMenu = () => {
               }}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Weight Input Dialog */}
+      <Dialog open={weightDialogOpen} onOpenChange={setWeightDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Quanto você deseja?</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedProduct && (
+              <div className="text-center">
+                <p className="font-medium text-lg">{selectedProduct.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  R$ {selectedProduct.price.toFixed(2)} por grama
+                </p>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="grams">Quantidade em gramas</Label>
+              <Input
+                id="grams"
+                type="number"
+                placeholder="Ex: 500"
+                value={gramsInput}
+                onChange={(e) => setGramsInput(e.target.value)}
+                min="1"
+                step="1"
+              />
+              {gramsInput && selectedProduct && (
+                <p className="text-sm text-muted-foreground text-right">
+                  Total: R$ {(parseFloat(gramsInput) * selectedProduct.price).toFixed(2)}
+                </p>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setWeightDialogOpen(false);
+                  setSelectedProduct(null);
+                  setGramsInput("");
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={addWeighableToCart}
+                disabled={!gramsInput || parseFloat(gramsInput) <= 0}
+              >
+                Adicionar ao Carrinho
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
