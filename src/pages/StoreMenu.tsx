@@ -1,4 +1,4 @@
-// Store Menu - Updated payment method labels
+// Store Menu - Weighable products with gram measurement enabled
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
