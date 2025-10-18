@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
+import { useState, useCallback } from "react";
+import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
 import { reverseGeocode } from "@/lib/geocoding";
 import { toast } from "sonner";
 
@@ -11,93 +10,72 @@ interface MapPickerProps {
 }
 
 const MapPicker = ({ latitude = -23.5505, longitude = -46.6333, onLocationSelect }: MapPickerProps) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const marker = useRef<mapboxgl.Marker | null>(null);
-  const [mapboxToken, setMapboxToken] = useState("");
+  const [googleMapsApiKey, setGoogleMapsApiKey] = useState("");
+  const [markerPosition, setMarkerPosition] = useState({ lat: latitude, lng: longitude });
 
-  useEffect(() => {
-    if (!mapContainer.current) return;
+  const mapContainerStyle = {
+    width: "100%",
+    height: "400px",
+    borderRadius: "0.5rem"
+  };
 
-    // Check if token is set
-    if (!mapboxToken) {
-      return;
-    }
+  const center = {
+    lat: latitude,
+    lng: longitude
+  };
 
-    mapboxgl.accessToken = mapboxToken;
-
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: "mapbox://styles/mapbox/streets-v12",
-      center: [longitude, latitude],
-      zoom: 13,
-    });
-
-    map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
-
-    // Add initial marker
-    marker.current = new mapboxgl.Marker({ draggable: true })
-      .setLngLat([longitude, latitude])
-      .addTo(map.current);
-
-    // Handle marker drag
-    marker.current.on("dragend", async () => {
-      const lngLat = marker.current!.getLngLat();
-      const address = await reverseGeocode(lngLat.lat, lngLat.lng);
-      if (address) {
-        onLocationSelect(lngLat.lat, lngLat.lng, address);
-        toast.success("Localização atualizada");
-      }
-    });
-
-    // Handle map click
-    map.current.on("click", async (e) => {
-      const { lng, lat } = e.lngLat;
+  const onMapClick = useCallback(async (e: google.maps.MapMouseEvent) => {
+    if (e.latLng) {
+      const lat = e.latLng.lat();
+      const lng = e.latLng.lng();
       
-      marker.current?.setLngLat([lng, lat]);
+      setMarkerPosition({ lat, lng });
       
       const address = await reverseGeocode(lat, lng);
       if (address) {
         onLocationSelect(lat, lng, address);
         toast.success("Localização selecionada");
       }
-    });
-
-    return () => {
-      map.current?.remove();
-    };
-  }, [mapboxToken, latitude, longitude, onLocationSelect]);
-
-  // Update marker position when props change
-  useEffect(() => {
-    if (marker.current && latitude && longitude) {
-      marker.current.setLngLat([longitude, latitude]);
-      map.current?.setCenter([longitude, latitude]);
     }
-  }, [latitude, longitude]);
+  }, [onLocationSelect]);
 
-  if (!mapboxToken) {
+  const onMarkerDragEnd = useCallback(async (e: google.maps.MapMouseEvent) => {
+    if (e.latLng) {
+      const lat = e.latLng.lat();
+      const lng = e.latLng.lng();
+      
+      setMarkerPosition({ lat, lng });
+      
+      const address = await reverseGeocode(lat, lng);
+      if (address) {
+        onLocationSelect(lat, lng, address);
+        toast.success("Localização atualizada");
+      }
+    }
+  }, [onLocationSelect]);
+
+  if (!googleMapsApiKey) {
     return (
       <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
         <p className="text-sm text-muted-foreground">
-          Para usar o mapa interativo, insira seu token público do Mapbox:
+          Para usar o mapa interativo, insira sua chave de API do Google Maps:
         </p>
         <input
           type="text"
           className="w-full px-3 py-2 border rounded-md"
-          placeholder="pk.eyJ1Ijo..."
-          value={mapboxToken}
-          onChange={(e) => setMapboxToken(e.target.value)}
+          placeholder="AIzaSy..."
+          value={googleMapsApiKey}
+          onChange={(e) => setGoogleMapsApiKey(e.target.value)}
         />
         <p className="text-xs text-muted-foreground">
-          Obtenha seu token gratuito em{" "}
+          Obtenha sua chave gratuita em{" "}
           <a
-            href="https://account.mapbox.com/access-tokens/"
+            href="https://console.cloud.google.com/google/maps-apis"
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary hover:underline"
           >
-            mapbox.com
+            Google Cloud Console
           </a>
         </p>
       </div>
@@ -106,7 +84,20 @@ const MapPicker = ({ latitude = -23.5505, longitude = -46.6333, onLocationSelect
 
   return (
     <div className="space-y-2">
-      <div ref={mapContainer} className="w-full h-[400px] rounded-lg" />
+      <LoadScript googleMapsApiKey={googleMapsApiKey}>
+        <GoogleMap
+          mapContainerStyle={mapContainerStyle}
+          center={center}
+          zoom={13}
+          onClick={onMapClick}
+        >
+          <Marker
+            position={markerPosition}
+            draggable={true}
+            onDragEnd={onMarkerDragEnd}
+          />
+        </GoogleMap>
+      </LoadScript>
       <p className="text-xs text-muted-foreground">
         Clique no mapa ou arraste o marcador para selecionar a localização
       </p>
