@@ -53,7 +53,7 @@ const StoreMenu = () => {
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
   const [weightDialogOpen, setWeightDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [kgInput, setKgInput] = useState("");
+  const [gramsInput, setGramsInput] = useState("");
   const [orderData, setOrderData] = useState({
     customer_name: "",
     customer_phone: "",
@@ -102,7 +102,7 @@ const StoreMenu = () => {
   const addToCart = (product: Product) => {
     if (product.is_weighable) {
       setSelectedProduct(product);
-      setKgInput("");
+      setGramsInput("");
       setWeightDialogOpen(true);
       return;
     }
@@ -123,13 +123,16 @@ const StoreMenu = () => {
   };
 
   const addWeighableToCart = () => {
-    if (!selectedProduct || !kgInput) return;
+    if (!selectedProduct || !gramsInput) return;
     
-    const kg = parseFloat(kgInput);
-    if (isNaN(kg) || kg <= 0) {
-      toast.error("Insira uma quantidade válida em kg");
+    const grams = parseFloat(gramsInput);
+    if (isNaN(grams) || grams <= 0) {
+      toast.error("Insira uma quantidade válida em gramas");
       return;
     }
+
+    // Convert grams to kg for storage
+    const kg = grams / 1000;
 
     const existingItem = cart.find((item) => item.id === selectedProduct.id);
     if (existingItem) {
@@ -144,10 +147,10 @@ const StoreMenu = () => {
       setCart([...cart, { ...selectedProduct, quantity: kg }]);
     }
     
-    toast.success(`${kg}kg de ${selectedProduct.name} adicionado ao carrinho`);
+    toast.success(`${grams}g de ${selectedProduct.name} adicionado ao carrinho`);
     setWeightDialogOpen(false);
     setSelectedProduct(null);
-    setKgInput("");
+    setGramsInput("");
   };
 
   const updateQuantity = (productId: string, delta: number) => {
@@ -544,19 +547,19 @@ const StoreMenu = () => {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="kg">Quantidade em kg</Label>
+              <Label htmlFor="grams">Quantidade em gramas</Label>
               <Input
-                id="kg"
+                id="grams"
                 type="number"
-                placeholder="Ex: 0.5"
-                value={kgInput}
-                onChange={(e) => setKgInput(e.target.value)}
-                min="0.1"
-                step="0.1"
+                placeholder="Ex: 500"
+                value={gramsInput}
+                onChange={(e) => setGramsInput(e.target.value)}
+                min="1"
+                step="50"
               />
-              {kgInput && selectedProduct && (
+              {gramsInput && selectedProduct && (
                 <p className="text-sm text-muted-foreground text-right">
-                  Total: R$ {(parseFloat(kgInput) * selectedProduct.price).toFixed(2)}
+                  Total: R$ {((parseFloat(gramsInput) / 1000) * selectedProduct.price).toFixed(2)}
                 </p>
               )}
             </div>
@@ -567,7 +570,7 @@ const StoreMenu = () => {
                 onClick={() => {
                   setWeightDialogOpen(false);
                   setSelectedProduct(null);
-                  setKgInput("");
+                  setGramsInput("");
                 }}
               >
                 Cancelar
@@ -575,7 +578,7 @@ const StoreMenu = () => {
               <Button
                 className="flex-1"
                 onClick={addWeighableToCart}
-                disabled={!kgInput || parseFloat(kgInput) <= 0}
+                disabled={!gramsInput || parseFloat(gramsInput) <= 0}
               >
                 Adicionar ao Carrinho
               </Button>
