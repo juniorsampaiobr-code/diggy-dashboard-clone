@@ -8,6 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { Search, MapPin } from "lucide-react";
+import MapPicker from "@/components/MapPicker";
+import { geocodeAddress } from "@/lib/geocoding";
 
 const StoreSettings = () => {
   const [loading, setLoading] = useState(false);
@@ -23,6 +26,9 @@ const StoreSettings = () => {
     whatsapp: "",
     logo_url: "",
   });
+  
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -51,11 +57,43 @@ const StoreSettings = () => {
           whatsapp: data.whatsapp || "",
           logo_url: data.logo_url || "",
         });
+        setLatitude(data.latitude?.toString() || "");
+        setLongitude(data.longitude?.toString() || "");
       }
     } catch (error) {
       console.error("Error loading store:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const geocodeStoreAddress = async () => {
+    if (!formData.address.trim()) {
+      toast({
+        title: "Endereço vazio",
+        description: "Preencha o endereço da loja primeiro",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    const result = await geocodeAddress(formData.address);
+    setLoading(false);
+    
+    if (result) {
+      setLatitude(result.latitude.toString());
+      setLongitude(result.longitude.toString());
+      toast({
+        title: "Coordenadas encontradas!",
+        description: "As coordenadas foram atualizadas. Clique em Salvar para confirmar.",
+      });
+    } else {
+      toast({
+        title: "Erro",
+        description: "Não foi possível encontrar as coordenadas. Tente inserir manualmente.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -69,6 +107,8 @@ const StoreSettings = () => {
         phone: formData.phone || null,
         whatsapp: formData.whatsapp || null,
         logo_url: formData.logo_url || null,
+        latitude: latitude ? parseFloat(latitude) : null,
+        longitude: longitude ? parseFloat(longitude) : null,
         owner_id: user?.id,
       };
 
@@ -160,6 +200,61 @@ const StoreSettings = () => {
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               />
+            </div>
+
+            <Button 
+              type="button" 
+              onClick={geocodeStoreAddress} 
+              variant="outline" 
+              className="w-full"
+              disabled={!formData.address || loading}
+            >
+              <Search className="h-4 w-4 mr-2" />
+              Buscar Coordenadas do Endereço
+            </Button>
+
+            <div className="space-y-4 pt-4 border-t">
+              <div className="flex items-center gap-2 mb-2">
+                <MapPin className="h-5 w-5" />
+                <Label>Localização no Mapa</Label>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Clique no mapa ou arraste o marcador para selecionar a localização exata da sua loja
+              </p>
+              <MapPicker
+                latitude={latitude ? parseFloat(latitude) : undefined}
+                longitude={longitude ? parseFloat(longitude) : undefined}
+                onLocationSelect={(lat, lng, address) => {
+                  setLatitude(lat.toString());
+                  setLongitude(lng.toString());
+                  setFormData({ ...formData, address });
+                }}
+              />
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="latitude">Latitude</Label>
+                <Input
+                  id="latitude"
+                  type="number"
+                  step="any"
+                  value={latitude}
+                  onChange={(e) => setLatitude(e.target.value)}
+                  placeholder="-23.5505"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="longitude">Longitude</Label>
+                <Input
+                  id="longitude"
+                  type="number"
+                  step="any"
+                  value={longitude}
+                  onChange={(e) => setLongitude(e.target.value)}
+                  placeholder="-46.6333"
+                />
+              </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
