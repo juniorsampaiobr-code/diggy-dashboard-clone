@@ -21,7 +21,11 @@ const StoreSettings = () => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    address: "",
+    street: "",
+    number: "",
+    neighborhood: "",
+    city: "",
+    zipCode: "",
     phone: "",
     whatsapp: "",
     logo_url: "",
@@ -52,7 +56,11 @@ const StoreSettings = () => {
         setFormData({
           name: data.name || "",
           description: data.description || "",
-          address: data.address || "",
+          street: "",
+          number: "",
+          neighborhood: "",
+          city: "",
+          zipCode: "",
           phone: data.phone || "",
           whatsapp: data.whatsapp || "",
           logo_url: data.logo_url || "",
@@ -67,18 +75,30 @@ const StoreSettings = () => {
     }
   };
 
+  const getFullAddress = () => {
+    const parts = [
+      formData.street,
+      formData.number,
+      formData.neighborhood,
+      formData.city,
+      formData.zipCode
+    ].filter(part => part.trim());
+    return parts.join(", ");
+  };
+
   const geocodeStoreAddress = async () => {
-    if (!formData.address.trim()) {
+    const fullAddress = getFullAddress();
+    if (!fullAddress) {
       toast({
         title: "Endereço vazio",
-        description: "Preencha o endereço da loja primeiro",
+        description: "Preencha pelo menos um campo do endereço",
         variant: "destructive",
       });
       return;
     }
 
     setLoading(true);
-    const result = await geocodeAddress(formData.address);
+    const result = await geocodeAddress(fullAddress);
     setLoading(false);
     
     if (result) {
@@ -100,10 +120,11 @@ const StoreSettings = () => {
   const handleSave = async () => {
     setLoading(true);
     try {
+      const fullAddress = getFullAddress();
       const storeData = {
         name: formData.name,
         description: formData.description || null,
-        address: formData.address || null,
+        address: fullAddress || null,
         phone: formData.phone || null,
         whatsapp: formData.whatsapp || null,
         logo_url: formData.logo_url || null,
@@ -192,14 +213,62 @@ const StoreSettings = () => {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="address">Endereço</Label>
-              <Input
-                id="address"
-                placeholder="Rua, número, bairro, cidade"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              />
+            <div className="space-y-4">
+              <Label>Endereço</Label>
+              
+              <div className="space-y-2">
+                <Label htmlFor="street">Rua/Avenida</Label>
+                <Input
+                  id="street"
+                  placeholder="Nome da rua"
+                  value={formData.street}
+                  onChange={(e) => setFormData({ ...formData, street: e.target.value })}
+                />
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="space-y-2">
+                  <Label htmlFor="number">Número</Label>
+                  <Input
+                    id="number"
+                    placeholder="123"
+                    value={formData.number}
+                    onChange={(e) => setFormData({ ...formData, number: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="neighborhood">Bairro</Label>
+                  <Input
+                    id="neighborhood"
+                    placeholder="Nome do bairro"
+                    value={formData.neighborhood}
+                    onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="city">Cidade</Label>
+                  <Input
+                    id="city"
+                    placeholder="Nome da cidade"
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="zipCode">CEP</Label>
+                  <Input
+                    id="zipCode"
+                    placeholder="00000-000"
+                    value={formData.zipCode}
+                    onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+                  />
+                </div>
+              </div>
             </div>
 
             <Button 
@@ -207,7 +276,7 @@ const StoreSettings = () => {
               onClick={geocodeStoreAddress} 
               variant="outline" 
               className="w-full"
-              disabled={!formData.address || loading}
+              disabled={!getFullAddress() || loading}
             >
               <Search className="h-4 w-4 mr-2" />
               Buscar Coordenadas do Endereço
@@ -224,10 +293,9 @@ const StoreSettings = () => {
               <MapPicker
                 latitude={latitude ? parseFloat(latitude) : undefined}
                 longitude={longitude ? parseFloat(longitude) : undefined}
-                onLocationSelect={(lat, lng, address) => {
+                onLocationSelect={(lat, lng) => {
                   setLatitude(lat.toString());
                   setLongitude(lng.toString());
-                  setFormData({ ...formData, address });
                 }}
               />
             </div>
