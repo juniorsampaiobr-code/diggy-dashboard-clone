@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ShoppingCart, Plus, Minus, Phone, MapPin } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Phone, MapPin, Trash2 } from "lucide-react";
 import { PaymentForm } from "@/components/PaymentForm";
 
 interface Product {
@@ -164,6 +164,14 @@ const StoreMenu = () => {
       }).filter((item) => item.quantity > 0);
       return newCart;
     });
+  };
+
+  const removeFromCart = (productId: string) => {
+    const item = cart.find((item) => item.id === productId);
+    setCart(cart.filter((item) => item.id !== productId));
+    if (item) {
+      toast.success(`${item.name} removido do carrinho`);
+    }
   };
 
   const getTotalPrice = () => {
@@ -405,6 +413,14 @@ const StoreMenu = () => {
                       onClick={() => updateQuantity(item.id, item.is_weighable ? 0.1 : 1)}
                     >
                       <Plus className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="destructive"
+                      onClick={() => removeFromCart(item.id)}
+                      title="Remover do carrinho"
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                   <div className="ml-4 font-bold">
