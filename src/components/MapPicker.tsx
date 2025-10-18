@@ -11,10 +11,18 @@ interface MapPickerProps {
 }
 
 const MapPicker = ({ latitude = -23.5505, longitude = -46.6333, onLocationSelect }: MapPickerProps) => {
-  const [mapboxToken, setMapboxToken] = useState("");
+  const [mapboxToken, setMapboxToken] = useState(() => {
+    return localStorage.getItem("mapbox_token") || "";
+  });
+  const [isMapLoading, setIsMapLoading] = useState(false);
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
+
+  const handleTokenChange = (token: string) => {
+    setMapboxToken(token);
+    localStorage.setItem("mapbox_token", token);
+  };
 
   const handleMapClick = useCallback(async (e: mapboxgl.MapMouseEvent) => {
     const { lng, lat } = e.lngLat;
@@ -45,23 +53,40 @@ const MapPicker = ({ latitude = -23.5505, longitude = -46.6333, onLocationSelect
   useEffect(() => {
     if (!mapboxToken || !mapContainer.current || map.current) return;
 
+    setIsMapLoading(true);
     mapboxgl.accessToken = mapboxToken;
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: "mapbox://styles/mapbox/streets-v12",
-      center: [longitude, latitude],
-      zoom: 13,
-    });
+    try {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: "mapbox://styles/mapbox/streets-v12",
+        center: [longitude, latitude],
+        zoom: 13,
+      });
 
-    marker.current = new mapboxgl.Marker({
-      draggable: true,
-    })
-      .setLngLat([longitude, latitude])
-      .addTo(map.current);
+      map.current.on("load", () => {
+        setIsMapLoading(false);
+      });
 
-    map.current.on("click", handleMapClick);
-    marker.current.on("dragend", handleMarkerDragEnd);
+      map.current.on("error", (e) => {
+        console.error("Mapbox error:", e);
+        setIsMapLoading(false);
+        toast.error("Erro ao carregar o mapa. Verifique se o token está correto.");
+      });
+
+      marker.current = new mapboxgl.Marker({
+        draggable: true,
+      })
+        .setLngLat([longitude, latitude])
+        .addTo(map.current);
+
+      map.current.on("click", handleMapClick);
+      marker.current.on("dragend", handleMarkerDragEnd);
+    } catch (error) {
+      console.error("Erro ao inicializar o mapa:", error);
+      setIsMapLoading(false);
+      toast.error("Erro ao inicializar o mapa. Verifique seu token Mapbox.");
+    }
 
     return () => {
       if (map.current) {
@@ -82,7 +107,7 @@ const MapPicker = ({ latitude = -23.5505, longitude = -46.6333, onLocationSelect
           className="w-full px-3 py-2 border rounded-md"
           placeholder="pk.eyJ1..."
           value={mapboxToken}
-          onChange={(e) => setMapboxToken(e.target.value)}
+          onChange={(e) => handleTokenChange(e.target.value)}
         />
         <p className="text-xs text-muted-foreground">
           Obtenha seu token gratuito em{" "}
@@ -102,7 +127,14 @@ const MapPicker = ({ latitude = -23.5505, longitude = -46.6333, onLocationSelect
 
   return (
     <div className="space-y-2">
-      <div ref={mapContainer} className="w-full h-[400px] rounded-lg" />
+      <div className="relative">
+        <div ref={mapContainer} className="w-full h-[400px] rounded-lg border" />
+        {isMapLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/50 rounded-lg">
+            <p className="text-sm text-muted-foreground">Carregando mapa...</p>
+          </div>
+        )}
+      </div>
       <p className="text-xs text-muted-foreground">
         Clique no mapa ou arraste o marcador para selecionar a localização
       </p>
