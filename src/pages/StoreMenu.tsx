@@ -380,7 +380,7 @@ const StoreMenu = () => {
                     <p className="font-medium">{item.name}</p>
                     <p className="text-sm text-muted-foreground">
                       {item.is_weighable 
-                        ? `${item.quantity}kg × R$ ${item.price.toFixed(2)}/kg`
+                        ? `${item.quantity.toFixed(2)}kg × R$ ${item.price.toFixed(2)}/kg`
                         : `${item.quantity} × R$ ${item.price.toFixed(2)}`
                       }
                     </p>
