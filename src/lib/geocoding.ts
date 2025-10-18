@@ -42,3 +42,26 @@ export async function geocodeAddress(address: string): Promise<GeocodingResult |
     return null;
   }
 }
+
+export async function reverseGeocode(latitude: number, longitude: number): Promise<string | null> {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+      {
+        headers: {
+          'User-Agent': 'StoreApp/1.0'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Reverse geocoding request failed');
+    }
+
+    const data = await response.json();
+    return data.display_name || null;
+  } catch (error) {
+    console.error('Reverse geocoding error:', error);
+    return null;
+  }
+}

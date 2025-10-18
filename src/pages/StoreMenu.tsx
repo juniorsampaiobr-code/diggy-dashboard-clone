@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { ShoppingCart, Plus, Minus, Phone, MapPin, Trash2, Search } from "lucide-react";
 import { PaymentForm } from "@/components/PaymentForm";
 import { geocodeAddress } from "@/lib/geocoding";
+import MapPicker from "@/components/MapPicker";
 
 interface Product {
   id: string;
@@ -575,6 +576,21 @@ const StoreMenu = () => {
                 Buscar Coordenadas e Calcular Entrega
               </Button>
 
+              <div className="space-y-4 pt-4 border-t">
+                <Label>Ou selecione no mapa:</Label>
+                <MapPicker
+                  latitude={deliveryLatitude ? parseFloat(deliveryLatitude) : (store?.latitude || undefined)}
+                  longitude={deliveryLongitude ? parseFloat(deliveryLongitude) : (store?.longitude || undefined)}
+                  onLocationSelect={async (lat, lng, address) => {
+                    setDeliveryLatitude(lat.toString());
+                    setDeliveryLongitude(lng.toString());
+                    setOrderData({ ...orderData, customer_address: address });
+                    // Auto-calculate delivery fee
+                    setTimeout(() => calculateDeliveryFee(), 500);
+                  }}
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="delivery_latitude">Latitude (opcional)</Label>
@@ -610,10 +626,6 @@ const StoreMenu = () => {
                   Recalcular Taxa de Entrega
                 </Button>
               )}
-
-              <p className="text-xs text-muted-foreground">
-                Clique em "Buscar Coordenadas" ou insira manualmente as coordenadas
-              </p>
 
               <div className="space-y-2">
                 <Label htmlFor="payment_method">Forma de Pagamento *</Label>

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Plus, Trash2, MapPin, Search } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { geocodeAddress } from "@/lib/geocoding";
+import MapPicker from "@/components/MapPicker";
 
 interface DeliveryRate {
   id: string;
@@ -187,6 +188,20 @@ const DeliveryRates = () => {
               <Search className="h-4 w-4 mr-2" />
               Buscar Coordenadas do Endereço
             </Button>
+            
+            <div className="space-y-4 pt-4 border-t">
+              <Label>Ou selecione no mapa:</Label>
+              <MapPicker
+                latitude={latitude ? parseFloat(latitude) : undefined}
+                longitude={longitude ? parseFloat(longitude) : undefined}
+                onLocationSelect={(lat, lng, address) => {
+                  setLatitude(lat.toString());
+                  setLongitude(lng.toString());
+                  setStoreAddress(address);
+                }}
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Latitude</Label>
@@ -212,9 +227,6 @@ const DeliveryRates = () => {
             <Button onClick={updateStoreCoordinates}>
               Atualizar Coordenadas
             </Button>
-            <p className="text-sm text-muted-foreground">
-              Clique em "Buscar Coordenadas" ou insira manualmente
-            </p>
           </CardContent>
         </Card>
 
