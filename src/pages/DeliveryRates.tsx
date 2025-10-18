@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, Trash2, MapPin } from "lucide-react";
+import { Plus, Trash2, MapPin, Search } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { geocodeAddress } from "@/lib/geocoding";
 
 interface DeliveryRate {
   id: string;
@@ -66,6 +67,24 @@ const DeliveryRates = () => {
     }
 
     setRates(data || []);
+  };
+
+  const geocodeStoreAddress = async () => {
+    if (!storeAddress.trim()) {
+      toast.error("Endereço da loja não encontrado");
+      return;
+    }
+
+    toast.loading("Buscando coordenadas...");
+    const result = await geocodeAddress(storeAddress);
+    
+    if (result) {
+      setLatitude(result.latitude.toString());
+      setLongitude(result.longitude.toString());
+      toast.success("Coordenadas encontradas!");
+    } else {
+      toast.error("Não foi possível encontrar as coordenadas. Tente inserir manualmente.");
+    }
   };
 
   const updateStoreCoordinates = async () => {
@@ -159,6 +178,15 @@ const DeliveryRates = () => {
               <Label>Endereço</Label>
               <Input value={storeAddress} disabled />
             </div>
+            <Button 
+              onClick={geocodeStoreAddress} 
+              variant="outline" 
+              className="w-full"
+              disabled={!storeAddress}
+            >
+              <Search className="h-4 w-4 mr-2" />
+              Buscar Coordenadas do Endereço
+            </Button>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Latitude</Label>
@@ -185,16 +213,7 @@ const DeliveryRates = () => {
               Atualizar Coordenadas
             </Button>
             <p className="text-sm text-muted-foreground">
-              Use{" "}
-              <a
-                href="https://www.google.com/maps"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary underline"
-              >
-                Google Maps
-              </a>{" "}
-              para obter as coordenadas do seu endereço
+              Clique em "Buscar Coordenadas" ou insira manualmente
             </p>
           </CardContent>
         </Card>

@@ -9,8 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ShoppingCart, Plus, Minus, Phone, MapPin, Trash2 } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Phone, MapPin, Trash2, Search } from "lucide-react";
 import { PaymentForm } from "@/components/PaymentForm";
+import { geocodeAddress } from "@/lib/geocoding";
 
 interface Product {
   id: string;
@@ -190,6 +191,27 @@ const StoreMenu = () => {
       Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
+  };
+
+  const geocodeCustomerAddress = async () => {
+    if (!orderData.customer_address.trim()) {
+      toast.error("Preencha o endereço de entrega primeiro");
+      return;
+    }
+
+    toast.loading("Buscando coordenadas...");
+    const result = await geocodeAddress(orderData.customer_address);
+    
+    if (result) {
+      setDeliveryLatitude(result.latitude.toString());
+      setDeliveryLongitude(result.longitude.toString());
+      toast.success("Coordenadas encontradas!");
+      
+      // Auto-calculate delivery fee
+      setTimeout(() => calculateDeliveryFee(), 500);
+    } else {
+      toast.error("Não foi possível encontrar as coordenadas. Tente inserir manualmente.");
+    }
   };
 
   const calculateDeliveryFee = async () => {
@@ -540,23 +562,22 @@ const StoreMenu = () => {
                   rows={3}
                   required
                 />
-                <p className="text-xs text-muted-foreground">
-                  Para calcular a taxa de entrega, use{" "}
-                  <a
-                    href="https://www.google.com/maps"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary underline"
-                  >
-                    Google Maps
-                  </a>{" "}
-                  para obter as coordenadas do seu endereço
-                </p>
               </div>
+
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full"
+                onClick={geocodeCustomerAddress}
+                disabled={!orderData.customer_address.trim()}
+              >
+                <Search className="h-4 w-4 mr-2" />
+                Buscar Coordenadas e Calcular Entrega
+              </Button>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="delivery_latitude">Latitude</Label>
+                  <Label htmlFor="delivery_latitude">Latitude (opcional)</Label>
                   <Input
                     id="delivery_latitude"
                     type="number"
@@ -567,7 +588,7 @@ const StoreMenu = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="delivery_longitude">Longitude</Label>
+                  <Label htmlFor="delivery_longitude">Longitude (opcional)</Label>
                   <Input
                     id="delivery_longitude"
                     type="number"
@@ -579,15 +600,20 @@ const StoreMenu = () => {
                 </div>
               </div>
 
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="w-full"
-                onClick={calculateDeliveryFee}
-                disabled={!deliveryLatitude || !deliveryLongitude}
-              >
-                Calcular Taxa de Entrega
-              </Button>
+              {deliveryLatitude && deliveryLongitude && (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={calculateDeliveryFee}
+                >
+                  Recalcular Taxa de Entrega
+                </Button>
+              )}
+
+              <p className="text-xs text-muted-foreground">
+                Clique em "Buscar Coordenadas" ou insira manualmente as coordenadas
+              </p>
 
               <div className="space-y-2">
                 <Label htmlFor="payment_method">Forma de Pagamento *</Label>
