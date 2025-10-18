@@ -53,7 +53,7 @@ const StoreMenu = () => {
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
   const [weightDialogOpen, setWeightDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [gramsInput, setGramsInput] = useState("");
+  const [kgInput, setKgInput] = useState("");
   const [orderData, setOrderData] = useState({
     customer_name: "",
     customer_phone: "",
@@ -102,7 +102,7 @@ const StoreMenu = () => {
   const addToCart = (product: Product) => {
     if (product.is_weighable) {
       setSelectedProduct(product);
-      setGramsInput("");
+      setKgInput("");
       setWeightDialogOpen(true);
       return;
     }
@@ -123,11 +123,11 @@ const StoreMenu = () => {
   };
 
   const addWeighableToCart = () => {
-    if (!selectedProduct || !gramsInput) return;
+    if (!selectedProduct || !kgInput) return;
     
-    const grams = parseFloat(gramsInput);
-    if (isNaN(grams) || grams <= 0) {
-      toast.error("Insira uma quantidade válida em gramas");
+    const kg = parseFloat(kgInput);
+    if (isNaN(kg) || kg <= 0) {
+      toast.error("Insira uma quantidade válida em kg");
       return;
     }
 
@@ -136,18 +136,18 @@ const StoreMenu = () => {
       setCart(
         cart.map((item) =>
           item.id === selectedProduct.id
-            ? { ...item, quantity: item.quantity + grams }
+            ? { ...item, quantity: item.quantity + kg }
             : item
         )
       );
     } else {
-      setCart([...cart, { ...selectedProduct, quantity: grams }]);
+      setCart([...cart, { ...selectedProduct, quantity: kg }]);
     }
     
-    toast.success(`${grams}g de ${selectedProduct.name} adicionado ao carrinho`);
+    toast.success(`${kg}kg de ${selectedProduct.name} adicionado ao carrinho`);
     setWeightDialogOpen(false);
     setSelectedProduct(null);
-    setGramsInput("");
+    setKgInput("");
   };
 
   const updateQuantity = (productId: string, delta: number) => {
@@ -345,7 +345,7 @@ const StoreMenu = () => {
                      <div className="flex items-center justify-between">
                       <span className="text-xl font-bold text-primary">
                         R$ {product.price.toFixed(2)}
-                        {product.is_weighable && <span className="text-xs text-muted-foreground ml-1">/grama</span>}
+                        {product.is_weighable && <span className="text-xs text-muted-foreground ml-1">/kg</span>}
                       </span>
                       <Button onClick={() => addToCart(product)}>
                         <Plus className="h-4 w-4 mr-1" />
@@ -380,7 +380,7 @@ const StoreMenu = () => {
                     <p className="font-medium">{item.name}</p>
                     <p className="text-sm text-muted-foreground">
                       {item.is_weighable 
-                        ? `${item.quantity}g × R$ ${item.price.toFixed(2)}/g`
+                        ? `${item.quantity}kg × R$ ${item.price.toFixed(2)}/kg`
                         : `${item.quantity} × R$ ${item.price.toFixed(2)}`
                       }
                     </p>
@@ -389,17 +389,17 @@ const StoreMenu = () => {
                     <Button
                       size="icon"
                       variant="outline"
-                      onClick={() => updateQuantity(item.id, item.is_weighable ? -10 : -1)}
+                      onClick={() => updateQuantity(item.id, item.is_weighable ? -0.1 : -1)}
                     >
                       <Minus className="h-4 w-4" />
                     </Button>
                     <span className="w-16 text-center font-medium text-xs">
-                      {item.is_weighable ? `${item.quantity}g` : item.quantity}
+                      {item.is_weighable ? `${item.quantity.toFixed(2)}kg` : item.quantity}
                     </span>
                     <Button
                       size="icon"
                       variant="outline"
-                      onClick={() => updateQuantity(item.id, item.is_weighable ? 10 : 1)}
+                      onClick={() => updateQuantity(item.id, item.is_weighable ? 0.1 : 1)}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -539,24 +539,24 @@ const StoreMenu = () => {
               <div className="text-center">
                 <p className="font-medium text-lg">{selectedProduct.name}</p>
                 <p className="text-sm text-muted-foreground">
-                  R$ {selectedProduct.price.toFixed(2)} por grama
+                  R$ {selectedProduct.price.toFixed(2)} por kg
                 </p>
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="grams">Quantidade em gramas</Label>
+              <Label htmlFor="kg">Quantidade em kg</Label>
               <Input
-                id="grams"
+                id="kg"
                 type="number"
-                placeholder="Ex: 500"
-                value={gramsInput}
-                onChange={(e) => setGramsInput(e.target.value)}
-                min="1"
-                step="1"
+                placeholder="Ex: 0.5"
+                value={kgInput}
+                onChange={(e) => setKgInput(e.target.value)}
+                min="0.1"
+                step="0.1"
               />
-              {gramsInput && selectedProduct && (
+              {kgInput && selectedProduct && (
                 <p className="text-sm text-muted-foreground text-right">
-                  Total: R$ {(parseFloat(gramsInput) * selectedProduct.price).toFixed(2)}
+                  Total: R$ {(parseFloat(kgInput) * selectedProduct.price).toFixed(2)}
                 </p>
               )}
             </div>
@@ -567,7 +567,7 @@ const StoreMenu = () => {
                 onClick={() => {
                   setWeightDialogOpen(false);
                   setSelectedProduct(null);
-                  setGramsInput("");
+                  setKgInput("");
                 }}
               >
                 Cancelar
@@ -575,7 +575,7 @@ const StoreMenu = () => {
               <Button
                 className="flex-1"
                 onClick={addWeighableToCart}
-                disabled={!gramsInput || parseFloat(gramsInput) <= 0}
+                disabled={!kgInput || parseFloat(kgInput) <= 0}
               >
                 Adicionar ao Carrinho
               </Button>

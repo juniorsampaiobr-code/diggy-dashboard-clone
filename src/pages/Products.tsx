@@ -372,7 +372,7 @@ const Products = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="price">
-                    Preço (R$) {formData.is_weighable ? "por grama" : "unitário"} *
+                    Preço (R$) {formData.is_weighable ? "por kg" : "unitário"} *
                   </Label>
                   <Input
                     id="price"
@@ -482,7 +482,7 @@ const Products = () => {
                     checked={formData.is_weighable}
                     onCheckedChange={(checked) => setFormData({ ...formData, is_weighable: checked })}
                   />
-                  <Label htmlFor="is_weighable">Produto pesável (preço por grama)</Label>
+                  <Label htmlFor="is_weighable">Produto pesável (preço por kg)</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch
